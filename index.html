@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consola — el panel de mando de tu negocio digital</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%231857CC'/%3E%3Ccircle cx='12' cy='13' r='6' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M12 13 L16 8' stroke='white' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='13' r='1.3' fill='white'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg: #E9EDF3;
+    --surface: #FFFFFF;
+    --surface-soft: #DEE4EC;
+    --ink: #10151F;
+    --ink-soft: #4E5964;
+    --ink-mute: #8892A0;
+    --line: #CDD5E0;
+    --primary: #1857CC;
+    --primary-soft: #DCE6FA;
+    --accent: #C1502E;
+    --accent-soft: #F5DCD2;
+    --good: #1F8A5D;
+    --good-soft: #DBEEE3;
+    --shadow: 0 1px 2px rgba(16,21,31,.05), 0 14px 30px -18px rgba(16,21,31,.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg: #0B0F16;
+      --surface: #151C27;
+      --surface-soft: #1D2531;
+      --ink: #E8ECF2;
+      --ink-soft: #93A0AF;
+      --ink-mute: #616E7C;
+      --line: rgba(255,255,255,.10);
+      --primary: #4C8DFF;
+      --primary-soft: #1B2A44;
+      --accent: #FF7A50;
+      --accent-soft: #3A2318;
+      --good: #34C98D;
+      --good-soft: #17302A;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 22px 44px -22px rgba(0,0,0,.65);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg: #0B0F16;
+    --surface: #151C27;
+    --surface-soft: #1D2531;
+    --ink: #E8ECF2;
+    --ink-soft: #93A0AF;
+    --ink-mute: #616E7C;
+    --line: rgba(255,255,255,.10);
+    --primary: #4C8DFF;
+    --primary-soft: #1B2A44;
+    --accent: #FF7A50;
+    --accent-soft: #3A2318;
+    --good: #34C98D;
+    --good-soft: #17302A;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 22px 44px -22px rgba(0,0,0,.65);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background: var(--primary-soft); color: var(--ink); }
+  h1,h2,h3{ font-family:"Rajdhani",system-ui,sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.01em; line-height:1.05; text-wrap:balance; margin:0; color:var(--ink); }
+  p{ margin:0; }
+  a{ color:inherit; }
+  code,.mono{ font-family:"JetBrains Mono", ui-monospace, monospace; }
+  .tab{ font-variant-numeric: tabular-nums; }
+
+  .eyebrow{ font-family:"JetBrains Mono",monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--primary); display:inline-flex; align-items:center; gap:.6em; }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background:var(--good); flex:none; box-shadow:0 0 0 3px var(--good-soft); }
+  @media (prefers-reduced-motion:no-preference){ .status-dot{ animation: pulse 2.4s ease-in-out infinite; } @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} } }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding-inline:clamp(20px,5vw,48px); }
+  section{ padding-block:clamp(52px,8vw,100px); }
+  .icon{ width:1em; height:1em; display:inline-block; vertical-align:-.14em; }
+  svg{ overflow:visible; }
+
+  /* panel frame: corner calibration marks, injected via JS */
+  .panel{ position:relative; background:var(--surface); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); }
+  .corner{ position:absolute; width:12px; height:12px; border-color:var(--ink-mute); pointer-events:none; }
+  .corner.tl{ top:-1px; left:-1px; border-top:2px solid; border-left:2px solid; border-top-left-radius:4px; }
+  .corner.tr{ top:-1px; right:-1px; border-top:2px solid; border-right:2px solid; border-top-right-radius:4px; }
+  .corner.bl{ bottom:-1px; left:-1px; border-bottom:2px solid; border-left:2px solid; border-bottom-left-radius:4px; }
+  .corner.br{ bottom:-1px; right:-1px; border-bottom:2px solid; border-right:2px solid; border-bottom-right-radius:4px; }
+
+  .panel-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 18px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+
+  /* nav */
+  header.site{ position:sticky; top:0; z-index:50; background:color-mix(in oklab, var(--bg) 88%, transparent); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+  .nav{ display:flex; align-items:center; justify-content:space-between; gap:20px; padding-block:15px; }
+  .brand{ display:flex; align-items:center; gap:.5em; font-family:"Rajdhani",sans-serif; font-weight:700; font-size:1.2rem; text-transform:uppercase; letter-spacing:.04em; text-decoration:none; }
+  .brand .icon{ font-size:1.5rem; color:var(--primary); }
+  .nav-links{ display:flex; gap:28px; list-style:none; margin:0; padding:0; font-size:.92rem; color:var(--ink-soft); }
+  .nav-links a{ text-decoration:none; } .nav-links a:hover{ color:var(--ink); }
+  .nav-right{ display:flex; align-items:center; gap:12px; }
+  .icon-btn{ width:36px; height:36px; border-radius:8px; border:1px solid var(--line); background:var(--surface); display:grid; place-items:center; cursor:pointer; color:var(--ink-soft); }
+  .icon-btn:hover{ color:var(--ink); border-color:var(--ink-mute); }
+  [data-theme="dark"] .icon-sun{ display:block; } [data-theme="dark"] .icon-moon{ display:none; }
+  .icon-sun{ display:none; } .icon-moon{ display:block; }
+  .mobile-toggle{ display:none; }
+  .mobile-menu{ display:none; }
+
+  .btn{ appearance:none; border:1px solid transparent; border-radius:6px; padding:.72em 1.3em; font-family:"Hanken Grotesk",sans-serif; font-weight:600; font-size:.92rem; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:.5em; white-space:nowrap; }
+  .btn-primary{ background:var(--primary); color:#fff; }
+  .btn-primary:hover{ background:color-mix(in oklab, var(--primary) 82%, black); }
+  .btn-ghost{ background:transparent; color:var(--ink); border-color:var(--line); }
+  .btn-ghost:hover{ border-color:var(--ink-mute); }
+  .btn-sm{ padding:.5em 1em; font-size:.85rem; }
+
+  /* hero */
+  .hero{ padding-top:clamp(44px,7vw,80px); }
+  .hero-copy{ max-width:740px; }
+  .hero h1{ font-size:clamp(2.5rem,5.2vw,4.1rem); margin-block:.5em .4em; }
+  .hero .sub{ font-size:clamp(1rem,1.5vw,1.14rem); color:var(--ink-soft); max-width:56ch; font-family:"Hanken Grotesk",sans-serif; text-transform:none; }
+  .hero-ctas{ display:flex; gap:14px; margin-top:1.9em; flex-wrap:wrap; }
+  @media (prefers-reduced-motion:no-preference){
+    .hero-anim{ animation:rise .65s cubic-bezier(.2,.7,.2,1) both; }
+    .hero-anim:nth-child(2){ animation-delay:.05s; } .hero-anim:nth-child(3){ animation-delay:.11s; } .hero-anim:nth-child(4){ animation-delay:.17s; }
+    @keyframes rise{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;} }
+  }
+
+  .gauge-panel{ margin-top:clamp(36px,6vw,60px); padding:clamp(18px,3.5vw,26px); }
+  .gauge-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .gauge{ padding:14px 4px 4px; }
+  .gauge .k{ font-family:"JetBrains Mono",monospace; font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-mute); }
+  .gauge .v{ font-family:"JetBrains Mono",monospace; font-weight:600; font-size:1.7rem; margin-top:.3em; }
+  .gauge .v.attn{ color:var(--accent); }
+  .gauge .v.ok{ color:var(--primary); }
+  .gauge .bar{ height:4px; border-radius:3px; background:var(--surface-soft); margin-top:.6em; overflow:hidden; }
+  .gauge .bar span{ display:block; height:100%; background:var(--primary); border-radius:3px; }
+  .gauge .bar.attn span{ background:var(--accent); }
+
+  /* launch sequence checklist */
+  .seq-head{ max-width:640px; margin-bottom:clamp(30px,5vw,48px); }
+  .seq-head h2{ font-size:clamp(1.9rem,3.3vw,2.4rem); margin-top:.4em; }
+  .seq-list{ max-width:760px; position:relative; }
+  .seq-list::before{ content:""; position:absolute; left:13px; top:14px; bottom:14px; width:1px; background:repeating-linear-gradient(to bottom, var(--line) 0 6px, transparent 6px 11px); }
+  .seq-row{ display:flex; gap:18px; padding-block:18px; }
+  .seq-row + .seq-row{ border-top:1px dashed var(--line); }
+  .seq-mark{ flex:none; width:27px; height:27px; border-radius:6px; display:grid; place-items:center; background:var(--good-soft); color:var(--good); position:relative; z-index:1; }
+  .seq-row.active .seq-mark{ background:var(--primary-soft); color:var(--primary); }
+  .seq-row.active .seq-mark .dot{ width:8px; height:8px; border-radius:50%; background:var(--primary); }
+  @media (prefers-reduced-motion:no-preference){ .seq-row.active .seq-mark .dot{ animation:pulse 1.6s ease-in-out infinite; } }
+  .seq-body .tag{ font-family:"JetBrains Mono",monospace; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-mute); }
+  .seq-row.active .seq-body .tag{ color:var(--primary); }
+  .seq-body h3{ font-size:1.15rem; margin:.3em 0 .25em; }
+  .seq-body p{ color:var(--ink-soft); font-size:.92rem; text-transform:none; font-family:"Hanken Grotesk",sans-serif; max-width:58ch; }
+
+  /* feature panels */
+  .feature{ border-top:1px solid var(--line); }
+  .feature .grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(30px,6vw,68px); align-items:center; }
+  .feature.reverse .grid{ direction:rtl; }
+  .feature.reverse .grid > *{ direction:ltr; }
+  .feature-copy h2{ font-size:clamp(1.85rem,3.1vw,2.3rem); margin-block:.4em .5em; }
+  .feature-copy .lead{ color:var(--ink-soft); max-width:48ch; margin-bottom:1.5em; font-size:1rem; }
+  .feature-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px; }
+  .feature-list li{ display:flex; gap:.7em; align-items:flex-start; font-size:.95rem; }
+  .feature-list .icon{ color:var(--primary); flex:none; margin-top:.2em; }
+
+  .panel-body{ padding:16px 18px 20px; }
+
+  /* customer record mockup */
+  .cust-card{ display:flex; gap:12px; align-items:center; padding-bottom:14px; border-bottom:1px solid var(--line); margin-bottom:14px; }
+  .avatar{ width:42px; height:42px; border-radius:8px; background:var(--primary-soft); color:var(--primary); font-family:"JetBrains Mono",monospace; font-weight:600; display:grid; place-items:center; flex:none; }
+  .cust-card .name{ font-weight:700; }
+  .cust-card .meta{ color:var(--ink-soft); font-size:.85rem; }
+  .cust-card .ltv{ margin-left:auto; text-align:right; }
+  .cust-card .ltv .k{ font-family:"JetBrains Mono",monospace; font-size:.64rem; text-transform:uppercase; color:var(--ink-mute); }
+  .cust-card .ltv .v{ font-family:"JetBrains Mono",monospace; font-weight:600; color:var(--good); }
+  .pipeline{ display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; }
+  .pstage{ flex:none; font-family:"JetBrains Mono",monospace; font-size:.68rem; text-transform:uppercase; letter-spacing:.02em; padding:.5em .8em; border-radius:100px; background:var(--surface-soft); color:var(--ink-mute); white-space:nowrap; }
+  .pstage.done{ color:var(--ink-soft); }
+  .pstage.current{ background:var(--primary); color:#fff; }
+  .task-row{ display:flex; gap:10px; align-items:center; font-size:.86rem; padding:8px 0; }
+  .task-row .box{ width:15px; height:15px; border-radius:4px; border:1.5px solid var(--line); flex:none; }
+  .task-row .when{ margin-left:auto; color:var(--ink-mute); font-family:"JetBrains Mono",monospace; font-size:.76rem; }
+
+  /* product grid */
+  .pgrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .pcard{ background:var(--surface-soft); border-radius:8px; padding:13px; }
+  .pcard .tag{ font-family:"JetBrains Mono",monospace; font-size:.64rem; text-transform:uppercase; letter-spacing:.07em; color:var(--primary); }
+  .pcard h4{ font-family:"Hanken Grotesk",sans-serif; text-transform:none; font-size:.9rem; font-weight:700; letter-spacing:0; margin:.4em 0 .5em; line-height:1.3; }
+  .pcard .price{ font-family:"JetBrains Mono",monospace; font-weight:600; color:var(--ink); }
+  .sales-line{ display:flex; justify-content:space-between; font-family:"JetBrains Mono",monospace; font-size:.82rem; color:var(--ink-soft); padding-top:10px; border-top:1px dashed var(--line); }
+  .sales-line b{ color:var(--good); }
+
+  /* radar rows */
+  .radar-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px dashed var(--line); }
+  .radar-row:last-child{ border-bottom:none; }
+  .ch-ico{ width:32px; height:32px; border-radius:8px; background:var(--primary-soft); color:var(--primary); display:grid; place-items:center; flex:none; }
+  .radar-main{ flex:1; min-width:0; }
+  .radar-main .who{ font-weight:700; font-size:.9rem; }
+  .radar-main .src{ color:var(--ink-soft); font-size:.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .score-block{ text-align:right; flex:none; }
+  .score-block .num{ font-family:"JetBrains Mono",monospace; font-weight:600; font-size:1rem; }
+  .badge{ font-family:"JetBrains Mono",monospace; font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; padding:.25em .6em; border-radius:5px; display:inline-block; margin-top:.2em; }
+  .badge.hot{ background:var(--accent-soft); color:var(--accent); font-weight:600; }
+  .badge.warm{ background:var(--surface-soft); color:var(--ink-soft); }
+  .badge.cold{ color:var(--ink-mute); border:1px solid var(--line); }
+
+  /* automation rules */
+  .rule{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:14px 0; border-bottom:1px dashed var(--line); font-size:.86rem; }
+  .rule:last-child{ border-bottom:none; }
+  .chip{ font-family:"JetBrains Mono",monospace; font-size:.76rem; padding:.45em .8em; border-radius:6px; background:var(--surface-soft); color:var(--ink); white-space:nowrap; }
+  .chip.trigger{ background:var(--primary-soft); color:var(--primary); }
+  .chip.action{ background:var(--good-soft); color:var(--good); }
+  .rule .icon{ color:var(--ink-mute); flex:none; }
+
+  /* dashboard */
+  .dash-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px; }
+  .stat{ padding:16px 15px; }
+  .stat .k{ font-family:"JetBrains Mono",monospace; font-size:.64rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-mute); }
+  .stat .v{ font-family:"JetBrains Mono",monospace; font-weight:600; font-size:1.35rem; margin-top:.3em; }
+  .stat .d{ font-size:.76rem; margin-top:.25em; font-family:"JetBrains Mono",monospace; }
+  .stat .d.up{ color:var(--good); }
+  .chart-panel{ padding:20px 22px 14px; position:relative; }
+  .chart-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; flex-wrap:wrap; gap:8px; }
+  .chart-head h4{ font-family:"Rajdhani",sans-serif; text-transform:uppercase; font-weight:700; font-size:1rem; }
+  .chart-head .k{ font-family:"JetBrains Mono",monospace; font-size:.68rem; color:var(--ink-mute); text-transform:uppercase; letter-spacing:.05em; }
+  #revChart{ width:100%; height:auto; display:block; }
+  .grid-line{ stroke:var(--line); stroke-width:1; }
+  .axis-label{ font-family:"JetBrains Mono",monospace; font-size:9.5px; fill:var(--ink-mute); }
+  .bar-rect{ fill:var(--primary); }
+  .bar-rect.hovered{ fill:color-mix(in oklab, var(--primary) 78%, black); }
+  .tooltip{ position:absolute; pointer-events:none; background:var(--ink); color:var(--bg); font-family:"JetBrains Mono",monospace; font-size:.72rem; padding:6px 9px; border-radius:6px; transform:translate(-50%,-125%); opacity:0; transition:opacity .1s; white-space:nowrap; }
+
+  /* pricing */
+  .price-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:stretch; }
+  .plan{ padding:26px 24px; display:flex; flex-direction:column; }
+  .plan.featured{ border-color:var(--primary); box-shadow:0 0 0 1px var(--primary), var(--shadow); }
+  .plan .pname{ font-family:"JetBrains Mono",monospace; font-size:.76rem; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-mute); }
+  .plan.featured .pname{ color:var(--primary); }
+  .plan .pprice{ font-family:"JetBrains Mono",monospace; font-weight:600; font-size:2.2rem; margin-block:.35em .1em; }
+  .plan .pprice span{ font-family:"Hanken Grotesk",sans-serif; font-size:.85rem; color:var(--ink-soft); }
+  .plan .pdesc{ color:var(--ink-soft); font-size:.88rem; margin-bottom:1.4em; }
+  .plan ul{ list-style:none; margin:0 0 1.6em; padding:0; display:flex; flex-direction:column; gap:9px; font-size:.87rem; flex:1; }
+  .plan li{ display:flex; gap:.6em; align-items:flex-start; }
+  .plan li .icon{ color:var(--primary); flex:none; margin-top:.2em; }
+
+  /* final CTA */
+  .cta-band{ background:var(--ink); color:var(--bg); border-radius:14px; margin-inline:clamp(20px,5vw,48px); padding:clamp(42px,8vw,76px) clamp(24px,6vw,56px); text-align:center; }
+  .cta-band h2{ color:var(--bg); font-size:clamp(2rem,4vw,2.9rem); }
+  .cta-band p{ color:color-mix(in oklab, var(--bg) 65%, transparent); margin-top:.7em; font-size:1rem; }
+  .cta-band .hero-ctas{ justify-content:center; margin-top:1.7em; }
+  .cta-band .btn-primary{ background:var(--primary); }
+  .cta-band .btn-ghost{ border-color:color-mix(in oklab, var(--bg) 28%, transparent); color:var(--bg); }
+
+  /* footer */
+  footer{ padding-block:clamp(44px,7vw,68px) 28px; }
+  .foot-grid{ display:grid; grid-template-columns:1.3fr repeat(3,1fr); gap:30px; padding-bottom:32px; border-bottom:1px solid var(--line); }
+  .foot-brand .brand{ margin-bottom:.7em; }
+  .foot-brand p{ color:var(--ink-soft); font-size:.88rem; max-width:32ch; margin-bottom:1.2em; }
+  .newsletter{ display:flex; gap:8px; max-width:320px; }
+  .newsletter input{ flex:1; min-width:0; font-family:"Hanken Grotesk",sans-serif; font-size:.85rem; padding:.6em .8em; border-radius:6px; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
+  .foot-col h5{ font-family:"JetBrains Mono",monospace; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-mute); margin-bottom:1em; }
+  .foot-col ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.7em; font-size:.88rem; color:var(--ink-soft); }
+  .foot-col a{ text-decoration:none; } .foot-col a:hover{ color:var(--ink); }
+  .foot-bottom{ display:flex; justify-content:space-between; align-items:center; padding-top:20px; font-size:.8rem; color:var(--ink-mute); flex-wrap:wrap; gap:10px; }
+
+  @media (max-width:900px){
+    .nav-links{ display:none; }
+    .mobile-toggle{ display:grid; }
+    .feature .grid{ grid-template-columns:1fr; }
+    .feature.reverse .grid{ direction:ltr; }
+    .feature .grid > .panel{ order:-1; }
+    .gauge-grid{ grid-template-columns:repeat(2,1fr); }
+    .dash-grid{ grid-template-columns:repeat(3,1fr); }
+    .price-grid{ grid-template-columns:1fr; }
+    .foot-grid{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:560px){
+    .dash-grid{ grid-template-columns:repeat(2,1fr); }
+    .foot-grid{ grid-template-columns:1fr; }
+    .pgrid{ grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="ic-dial" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+    <circle cx="12" cy="13" r="7.2"/><path d="M12 13 L16.2 7.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor" stroke="none"/><path d="M8 4.6h8" stroke-width="1.5"/>
+  </symbol>
+  <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+    <circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.9 1.9M17.5 17.5l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.9-1.9M17.5 6.5l1.9-1.9"/>
+  </symbol>
+  <symbol id="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.4 6.4 0 0 0 10.2 10.2Z"/>
+  </symbol>
+  <symbol id="ic-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="ic-tiktok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 3v11.4a3.3 3.3 0 1 1-2.3-3.14"/><path d="M9 3.3c.9 2.6 3 4.2 5.8 4.5v2.6c-2-.05-3.7-.6-5-1.5"/>
+  </symbol>
+  <symbol id="ic-whatsapp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.3 18.4 3.5 20l1.6-3.2A8 8 0 1 1 12 20a8 8 0 0 1-5.7-1.6Z"/>
+  </symbol>
+  <symbol id="ic-email" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+    <rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M4 7l8 6.4L20 7"/>
+  </symbol>
+  <symbol id="ic-ads" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5 9.5v5l14 4V5.5Z"/><path d="M17.5 9.8a3 3 0 0 1 0 4.4"/>
+  </symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12.8 9 18 20 6"/>
+  </symbol>
+  <symbol id="ic-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12h15M13 6l6 6-6 6"/>
+  </symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+    <path d="M4 7h16M4 12h16M4 17h16"/>
+  </symbol>
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/>
+  </symbol>
+</svg>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="#top"><svg class="icon"><use href="#ic-dial"/></svg>Consola</a>
+    <ul class="nav-links">
+      <li><a href="#radar">Radar de Leads</a></li>
+      <li><a href="#clientes">Clientes</a></li>
+      <li><a href="#tienda">Tienda</a></li>
+      <li><a href="#precios">Precios</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeToggle" aria-label="Cambiar tema" title="Cambiar tema">
+        <svg class="icon icon-sun"><use href="#ic-sun"/></svg>
+        <svg class="icon icon-moon"><use href="#ic-moon"/></svg>
+      </button>
+      <button class="icon-btn mobile-toggle" id="mobileToggle" aria-label="Abrir menú" title="Menú">
+        <svg class="icon"><use href="#ic-menu"/></svg>
+      </button>
+      <a class="btn btn-primary btn-sm" href="#precios">Activar mi consola</a>
+    </div>
+  </div>
+  <div class="mobile-menu wrap" id="mobileMenu" style="padding-bottom:16px;">
+    <ul class="nav-links" style="flex-direction:column; gap:14px; font-size:1rem;">
+      <li><a href="#radar">Radar de Leads</a></li>
+      <li><a href="#clientes">Clientes</a></li>
+      <li><a href="#tienda">Tienda</a></li>
+      <li><a href="#precios">Precios</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <p class="eyebrow hero-anim">Panel de control para negocios digitales · 2026</p>
+        <h1 class="hero-anim">Todo tu negocio,<br>en una sola consola.</h1>
+        <p class="sub hero-anim">Clientes, tienda de productos digitales y redes sociales, controlados desde un mismo tablero. Sin pestañas de más, sin datos perdidos entre apps.</p>
+        <div class="hero-ctas hero-anim">
+          <a class="btn btn-primary" href="#precios">Activar mi consola</a>
+          <a class="btn btn-ghost" href="#radar">Ver demo en vivo <svg class="icon"><use href="#ic-arrow"/></svg></a>
+        </div>
+      </div>
+
+      <div class="panel gauge-panel">
+        <div class="gauge-grid">
+          <div class="gauge">
+            <div class="k">Leads captados hoy</div>
+            <div class="v ok tab">128</div>
+            <div class="bar"><span style="width:85%"></span></div>
+          </div>
+          <div class="gauge">
+            <div class="k">Pedidos procesados</div>
+            <div class="v ok tab">47</div>
+            <div class="bar"><span style="width:78%"></span></div>
+          </div>
+          <div class="gauge">
+            <div class="k">Chats sin responder</div>
+            <div class="v attn tab">3</div>
+            <div class="bar attn"><span style="width:30%"></span></div>
+          </div>
+          <div class="gauge">
+            <div class="k">MRR</div>
+            <div class="v ok tab">8.420&nbsp;€</div>
+            <div class="bar"><span style="width:84%"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAUNCH SEQUENCE -->
+  <section>
+    <div class="wrap">
+      <div class="seq-head">
+        <p class="eyebrow">Cómo funciona</p>
+        <h2>La misma secuencia, cada vez</h2>
+      </div>
+      <div class="seq-list">
+        <div class="seq-row">
+          <div class="seq-mark"><svg class="icon"><use href="#ic-check"/></svg></div>
+          <div class="seq-body">
+            <span class="tag">Paso 1 · Completado</span>
+            <h3>Detectar</h3>
+            <p>Cada comentario, DM o clic en un anuncio entra al radar de leads y se puntúa automáticamente.</p>
+          </div>
+        </div>
+        <div class="seq-row">
+          <div class="seq-mark"><svg class="icon"><use href="#ic-check"/></svg></div>
+          <div class="seq-body">
+            <span class="tag">Paso 2 · Completado</span>
+            <h3>Cualificar</h3>
+            <p>El lead scoring separa quién está listo para comprar de quién solo está mirando.</p>
+          </div>
+        </div>
+        <div class="seq-row">
+          <div class="seq-mark"><svg class="icon"><use href="#ic-check"/></svg></div>
+          <div class="seq-body">
+            <span class="tag">Paso 3 · Completado</span>
+            <h3>Gestionar</h3>
+            <p>Pasa a una ficha de cliente con pipeline, tareas y recordatorios de seguimiento.</p>
+          </div>
+        </div>
+        <div class="seq-row active">
+          <div class="seq-mark"><span class="dot"></span></div>
+          <div class="seq-body">
+            <span class="tag">Paso 4 · En curso</span>
+            <h3>Vender</h3>
+            <p>Se le ofrece el producto digital adecuado, con checkout en un paso y entrega automática.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RADAR DE LEADS -->
+  <section id="radar" class="feature">
+    <div class="wrap grid">
+      <div class="feature-copy">
+        <p class="eyebrow"><span class="status-dot"></span>Panel 01 · Radar de leads · En línea</p>
+        <h2>Detecta y cualifica leads antes de que se enfríen</h2>
+        <p class="lead">Una sola bandeja para todos tus canales, con puntuación automática, para saber exactamente a quién responder primero.</p>
+        <ul class="feature-list">
+          <li><svg class="icon"><use href="#ic-check"/></svg>Bandeja única para Instagram, WhatsApp, TikTok y email</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Lead scoring automático en tiempo real</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Sincronización con Meta Ads y TikTok Ads: qué anuncio trajo a cada lead</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Enlace "en bio" con formularios que crean la ficha directo en el CRM</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Alertas automáticas cuando entra un lead caliente</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow" style="color:var(--ink-mute)">18 leads nuevos hoy</span><span class="badge hot">5 calientes</span></div>
+        <div class="panel-body">
+          <div class="radar-row">
+            <div class="ch-ico"><svg class="icon"><use href="#ic-instagram"/></svg></div>
+            <div class="radar-main"><div class="who">@martaviajes</div><div class="src">Clic en "Curso Fotografía Móvil"</div></div>
+            <div class="score-block"><div class="num tab">92/100</div><span class="badge hot">Caliente</span></div>
+          </div>
+          <div class="radar-row">
+            <div class="ch-ico"><svg class="icon"><use href="#ic-whatsapp"/></svg></div>
+            <div class="radar-main"><div class="who">Diego Salas</div><div class="src">Preguntó precio de la membresía</div></div>
+            <div class="score-block"><div class="num tab">88/100</div><span class="badge hot">Caliente</span></div>
+          </div>
+          <div class="radar-row">
+            <div class="ch-ico"><svg class="icon"><use href="#ic-ads"/></svg></div>
+            <div class="radar-main"><div class="who">Rocío Medina</div><div class="src">Anuncio "Plantillas Notion" · Meta Ads</div></div>
+            <div class="score-block"><div class="num tab">54/100</div><span class="badge warm">Tibio</span></div>
+          </div>
+          <div class="radar-row">
+            <div class="ch-ico"><svg class="icon"><use href="#ic-email"/></svg></div>
+            <div class="radar-main"><div class="who">Iván Costa</div><div class="src">Descargó guía gratuita, sin respuesta</div></div>
+            <div class="score-block"><div class="num tab">21/100</div><span class="badge cold">Frío</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLIENTES -->
+  <section id="clientes" class="feature reverse">
+    <div class="wrap grid">
+      <div class="feature-copy">
+        <p class="eyebrow"><span class="status-dot"></span>Panel 02 · Clientes · En línea</p>
+        <h2>Cada cliente, con ficha completa y en tiempo real</h2>
+        <p class="lead">Historial de compras, conversaciones y notas en un solo lugar. El pipeline visual muestra en qué etapa está cada oportunidad.</p>
+        <ul class="feature-list">
+          <li><svg class="icon"><use href="#ic-check"/></svg>Ficha 360° con historial completo de interacciones</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Pipeline visual de oportunidades, de contacto a cliente recurrente</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Tareas y recordatorios de seguimiento automáticos</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Segmentación dinámica según comportamiento de compra</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Permisos por miembro del equipo</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow" style="color:var(--ink-mute)">Ficha de cliente</span><span class="mono" style="font-size:.72rem;color:var(--ink-mute)">#00482</span></div>
+        <div class="panel-body">
+          <div class="cust-card">
+            <div class="avatar">LF</div>
+            <div>
+              <div class="name">Laura Fernández</div>
+              <div class="meta">Cliente desde marzo 2025</div>
+            </div>
+            <div class="ltv"><div class="k">LTV</div><div class="v tab">340 €</div></div>
+          </div>
+          <div class="pipeline">
+            <span class="pstage done">Nuevo contacto</span>
+            <span class="pstage done">Cualificado</span>
+            <span class="pstage current">Propuesta enviada</span>
+            <span class="pstage">Cliente activo</span>
+            <span class="pstage">Recurrente</span>
+          </div>
+          <div class="task-row"><span class="box"></span>Llamar a Laura para cerrar la propuesta<span class="when">mañana 10:00</span></div>
+          <div class="task-row"><span class="box"></span>Enviar "Notion Finanzas Pro" tras el pago<span class="when">automático</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIENDA -->
+  <section id="tienda" class="feature">
+    <div class="wrap grid">
+      <div class="feature-copy">
+        <p class="eyebrow"><span class="status-dot"></span>Panel 03 · Tienda · En línea</p>
+        <h2>Vende infoproductos sin fricción, cobra sin complicaciones</h2>
+        <p class="lead">Un catálogo y checkout propios. Cada venta se entrega sola y queda registrada al instante en la ficha del cliente.</p>
+        <ul class="feature-list">
+          <li><svg class="icon"><use href="#ic-check"/></svg>Catálogo para ebooks, cursos, plantillas, membresías y packs</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Checkout en un paso: Bizum, tarjeta o PayPal</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Entrega automática al instante tras el pago</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Cupones programados y ventas por afiliados con comisión automática</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Facturación automática por cada venta</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow" style="color:var(--ink-mute)">Catálogo</span><span class="mono" style="font-size:.72rem;color:var(--ink-mute)">4 productos</span></div>
+        <div class="panel-body">
+          <div class="pgrid">
+            <div class="pcard"><span class="tag">Plantilla</span><h4>Notion Finanzas Pro</h4><span class="price tab">27 €</span></div>
+            <div class="pcard"><span class="tag">Curso</span><h4>Marca Personal en 30 Días</h4><span class="price tab">149 €</span></div>
+            <div class="pcard"><span class="tag">Pack</span><h4>Presets Lightroom Editorial</h4><span class="price tab">19 €</span></div>
+            <div class="pcard"><span class="tag">Membresía</span><h4>Comunidad Creadores PRO</h4><span class="price tab">15 €/mes</span></div>
+          </div>
+          <div class="sales-line"><span>Ventas del mes</span><b class="tab">6.240 € · 312 descargas entregadas</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUGGESTED: AUTOMATION -->
+  <section class="feature reverse" style="background:var(--surface-soft);">
+    <div class="wrap grid">
+      <div class="feature-copy">
+        <p class="eyebrow">Función sugerida · Centro de Secuencias</p>
+        <h2>No solo lees los diales, programas la cabina</h2>
+        <p class="lead">Automatizaciones sin código que reaccionan solas a lo que pasa en tu radar de leads, tu CRM y tu tienda — para que el negocio siga funcionando aunque tú no estés mirando el panel.</p>
+        <ul class="feature-list">
+          <li><svg class="icon"><use href="#ic-check"/></svg>Reglas "si esto, entonces aquello" sin escribir código</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Dispara mensajes, tareas o asignaciones según el puntaje del lead</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Conecta eventos de la tienda con acciones en el CRM</li>
+          <li><svg class="icon"><use href="#ic-check"/></svg>Historial de cada ejecución, para auditar qué se envió y cuándo</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow" style="color:var(--ink-mute)"><svg class="icon"><use href="#ic-bolt"/></svg>Secuencias activas</span><span class="mono" style="font-size:.72rem;color:var(--ink-mute)">2 en ejecución</span></div>
+        <div class="panel-body">
+          <div class="rule">
+            <span class="chip trigger">Lead score &gt; 80</span>
+            <svg class="icon"><use href="#ic-arrow"/></svg>
+            <span class="chip action">Enviar WhatsApp automático</span>
+            <svg class="icon"><use href="#ic-arrow"/></svg>
+            <span class="chip action">Asignar a Carlos (Ventas)</span>
+          </div>
+          <div class="rule">
+            <span class="chip trigger">Compra completada</span>
+            <svg class="icon"><use href="#ic-arrow"/></svg>
+            <span class="chip action">Enviar acceso al curso</span>
+            <svg class="icon"><use href="#ic-arrow"/></svg>
+            <span class="chip action">Añadir a lista VIP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="feature">
+    <div class="wrap">
+      <p class="eyebrow">Panel general</p>
+      <h2 style="font-size:clamp(1.85rem,3.1vw,2.3rem); margin-block:.4em .8em;">Un vistazo, todas las respuestas</h2>
+
+      <div class="dash-grid">
+        <div class="panel stat"><div class="k">Ingresos del mes</div><div class="v tab">8.420 €</div><div class="d up tab">+18%</div></div>
+        <div class="panel stat"><div class="k">Nuevos leads</div><div class="v tab">342</div><div class="d up tab">+9%</div></div>
+        <div class="panel stat"><div class="k">Conversión lead→cliente</div><div class="v tab">12,4%</div><div class="d up tab">+1,1 pp</div></div>
+        <div class="panel stat"><div class="k">Clientes activos</div><div class="v tab">1.208</div><div class="d up tab">+5%</div></div>
+        <div class="panel stat"><div class="k">Ticket medio</div><div class="v tab">42 €</div><div class="d up tab">+3%</div></div>
+        <div class="panel stat"><div class="k">Resp. media</div><div class="v tab">3 min</div><div class="d up tab">−22%</div></div>
+      </div>
+
+      <div class="panel chart-panel">
+        <div class="chart-head">
+          <h4>Ingresos mensuales</h4>
+          <span class="k">Abr — Sep 2026</span>
+        </div>
+        <svg id="revChart" viewBox="0 0 640 210" role="img" aria-label="Gráfico de barras de ingresos mensuales, de 5.200 € en abril a 8.420 € en septiembre">
+          <g id="gridLines"></g>
+          <g id="axisY"></g>
+          <g id="bars"></g>
+          <g id="axisLabels"></g>
+        </svg>
+        <div class="tooltip" id="chartTooltip"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="precios" class="feature">
+    <div class="wrap">
+      <p class="eyebrow">Precios</p>
+      <h2 style="font-size:clamp(1.85rem,3.1vw,2.3rem); margin-block:.4em .9em;">Un panel para cada etapa del vuelo</h2>
+      <div class="price-grid">
+        <div class="panel plan">
+          <span class="pname">Solo</span>
+          <div class="pprice">19&nbsp;€<span>/mes</span></div>
+          <p class="pdesc">Para quien está empezando a vender productos digitales.</p>
+          <ul>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Hasta 500 contactos</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>1 red social conectada</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Tienda con 5 productos</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Pipeline y tareas básicas</li>
+          </ul>
+          <a class="btn btn-ghost" href="#">Empezar gratis</a>
+        </div>
+        <div class="panel plan featured">
+          <span class="pname">Estudio · más elegido</span>
+          <div class="pprice">49&nbsp;€<span>/mes</span></div>
+          <p class="pdesc">Para negocios con captación activa en varias redes.</p>
+          <ul>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Contactos y catálogo ilimitados</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Todas las redes sociales conectadas</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Centro de Secuencias incluido</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Afiliados y cupones automáticos</li>
+          </ul>
+          <a class="btn btn-primary" href="#">Empezar gratis</a>
+        </div>
+        <div class="panel plan">
+          <span class="pname">Agencia</span>
+          <div class="pprice">129&nbsp;€<span>/mes</span></div>
+          <p class="pdesc">Para equipos que gestionan varias marcas o clientes.</p>
+          <ul>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Todo lo del plan Estudio</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Portales de cliente en marca blanca</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Multi-cuenta y roles avanzados</li>
+            <li><svg class="icon"><use href="#ic-check"/></svg>Soporte prioritario</li>
+          </ul>
+          <a class="btn btn-ghost" href="#">Hablar con ventas</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section style="padding-block:clamp(18px,4vw,36px) clamp(52px,9vw,96px);">
+    <div class="cta-band">
+      <h2>Activa tu consola hoy</h2>
+      <p>Prueba gratis 14 días. Sin tarjeta de crédito.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#precios">Activar mi consola</a>
+        <a class="btn btn-ghost" href="#radar">Ver cómo funciona</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><svg class="icon"><use href="#ic-dial"/></svg>Consola</a>
+        <p>El panel de mando que une redes sociales, clientes y tienda digital en una sola pantalla.</p>
+        <form class="newsletter" id="newsletterForm">
+          <input type="email" placeholder="tu@email.com" required aria-label="Correo electrónico">
+          <button class="btn btn-primary btn-sm" type="submit">Suscribirme</button>
+        </form>
+      </div>
+      <div class="foot-col">
+        <h5>Producto</h5>
+        <ul><li><a href="#radar">Radar de leads</a></li><li><a href="#precios">Precios</a></li><li><a href="#">Novedades</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h5>Recursos</h5>
+        <ul><li><a href="#">Centro de ayuda</a></li><li><a href="#">Comunidad</a></li><li><a href="#">API</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h5>Compañía</h5>
+        <ul><li><a href="#">Sobre Consola</a></li><li><a href="#">Empleo</a></li><li><a href="#">Contacto</a></li></ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Consola. Hecho para negocios digitales.</span>
+      <span>Privacidad · Términos</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function(){
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggle');
+    var saved = localStorage.getItem('consola-theme');
+    if(saved){ root.setAttribute('data-theme', saved); }
+    btn.addEventListener('click', function(){
+      var isDark = root.getAttribute('data-theme') === 'dark' ||
+        (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      var next = isDark ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('consola-theme', next);
+    });
+  })();
+
+  // mobile menu
+  (function(){
+    var toggle = document.getElementById('mobileToggle');
+    var menu = document.getElementById('mobileMenu');
+    toggle.addEventListener('click', function(){
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+    menu.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){ menu.style.display = 'none'; });
+    });
+  })();
+
+  // panel corner marks
+  (function(){
+    document.querySelectorAll('.panel').forEach(function(p){
+      ['tl','tr','bl','br'].forEach(function(c){
+        var s = document.createElement('span');
+        s.className = 'corner ' + c;
+        p.appendChild(s);
+      });
+    });
+  })();
+
+  // newsletter mock submit
+  (function(){
+    var form = document.getElementById('newsletterForm');
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var btn = form.querySelector('button');
+      var input = form.querySelector('input');
+      btn.textContent = 'Suscrito';
+      input.disabled = true; btn.disabled = true;
+    });
+  })();
+
+  // revenue bar chart
+  (function(){
+    var data = [5200,5800,6400,7100,7800,8420];
+    var labels = ['Abr','May','Jun','Jul','Ago','Sep'];
+    var svg = document.getElementById('revChart');
+    var padL = 46, padR = 14, padT = 10, padB = 24;
+    var w = 640 - padL - padR, h = 210 - padT - padB;
+    var maxV = 9000;
+    function x(i){ return padL + (i/data.length)*w + (w/data.length)*0.5; }
+    function barW(){ return (w/data.length)*0.5; }
+    function y(v){ return padT + h - (v/maxV)*h; }
+
+    var gridG = document.getElementById('gridLines');
+    var axisYG = document.getElementById('axisY');
+    var axisG = document.getElementById('axisLabels');
+    var barsG = document.getElementById('bars');
+
+    [2000,4000,6000,8000].forEach(function(v){
+      var ln = document.createElementNS('http://www.w3.org/2000/svg','line');
+      ln.setAttribute('x1', padL); ln.setAttribute('x2', 640-padR);
+      ln.setAttribute('y1', y(v)); ln.setAttribute('y2', y(v));
+      ln.setAttribute('class','grid-line');
+      gridG.appendChild(ln);
+      var t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', padL-8); t.setAttribute('y', y(v)+3);
+      t.setAttribute('text-anchor','end'); t.setAttribute('class','axis-label');
+      t.textContent = (v/1000)+'k';
+      axisYG.appendChild(t);
+    });
+
+    var rects = [];
+    data.forEach(function(v,i){
+      var bw = barW();
+      var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x', x(i)-bw/2); rect.setAttribute('y', y(v));
+      rect.setAttribute('width', bw); rect.setAttribute('height', (padT+h)-y(v));
+      rect.setAttribute('rx', 4); rect.setAttribute('class','bar-rect');
+      barsG.appendChild(rect);
+      rects.push(rect);
+
+      var t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', x(i)); t.setAttribute('y', 210-6);
+      t.setAttribute('text-anchor','middle'); t.setAttribute('class','axis-label');
+      t.textContent = labels[i];
+      axisG.appendChild(t);
+    });
+
+    var tooltip = document.getElementById('chartTooltip');
+    var card = svg.closest('.chart-panel');
+    var fmt = new Intl.NumberFormat('es-ES');
+
+    function showAt(i){
+      rects.forEach(function(r,ri){ r.classList.toggle('hovered', ri===i); });
+      var rect = svg.getBoundingClientRect();
+      var cardRect = card.getBoundingClientRect();
+      var scale = rect.width/640;
+      var px = x(i), py = y(data[i]);
+      tooltip.style.left = (rect.left - cardRect.left + px*scale) + 'px';
+      tooltip.style.top = (rect.top - cardRect.top + py*scale) + 'px';
+      tooltip.textContent = labels[i]+' · '+fmt.format(data[i])+' €';
+      tooltip.style.opacity = 1;
+    }
+    function hide(){ rects.forEach(function(r){ r.classList.remove('hovered'); }); tooltip.style.opacity = 0; }
+
+    svg.addEventListener('mousemove', function(e){
+      var rect = svg.getBoundingClientRect();
+      var relX = (e.clientX - rect.left) / rect.width * 640;
+      var i = Math.floor((relX - padL) / (w/data.length));
+      i = Math.max(0, Math.min(data.length-1, i));
+      showAt(i);
+    });
+    svg.addEventListener('mouseleave', hide);
+  })();
+</script>
+</body>
+</html>

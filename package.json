@@ -1,0 +1,13 @@
+{
+  "name": "mi-crm-vibecoder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consola - landing page de un CRM 2026 (gestion de clientes, tienda de productos digitales, captacion de leads en redes)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
